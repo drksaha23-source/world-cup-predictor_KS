@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Kowshik's World Cup 2026 Predictor</title>
+<style>
+:root{
+  --bg:#07111f;--panel:#0f172a;--card:#111c33;--soft:#1f2a44;--line:#2d3b60;
+  --text:#f8fbff;--muted:#aab6d6;--gold:#ffd166;--green:#6ee7a8;--red:#ff7b7b;--blue:#8ab4ff;
+}
+*{box-sizing:border-box} body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif;background:radial-gradient(circle at top left,#1a2b52 0,#07111f 38%,#030712 100%);color:var(--text)}
+header{padding:18px 16px 12px;border-bottom:1px solid var(--line);background:rgba(7,17,31,.92);position:sticky;top:0;z-index:5;backdrop-filter:blur(12px)}
+h1{font-size:22px;margin:0}.sub{color:var(--muted);font-size:13px;margin-top:4px}
+nav{display:flex;gap:8px;overflow:auto;padding:10px 16px;background:rgba(7,17,31,.95);border-bottom:1px solid var(--line);position:sticky;top:64px;z-index:4}
+button,.btn{border:1px solid var(--line);border-radius:999px;background:var(--soft);color:var(--text);padding:9px 12px;cursor:pointer;font-weight:650}
+button.active,.primary{background:var(--green);border-color:var(--green);color:#062111}.ghost{background:transparent}.danger{background:rgba(255,123,123,.14);border-color:var(--red)}
+main{max-width:1320px;margin:auto;padding:16px}.section{display:none}.section.active{display:block}
+.card{background:rgba(17,28,51,.94);border:1px solid var(--line);border-radius:18px;padding:14px;box-shadow:0 12px 30px rgba(0,0,0,.22)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:14px}.widegrid{display:grid;grid-template-columns:1.25fr .75fr;gap:14px}
+@media(max-width:900px){.widegrid{grid-template-columns:1fr} nav{top:72px}}
+h2{font-size:18px;margin:0 0 12px} h3{font-size:15px;margin:10px 0 8px;color:#e3eaff}
+.note{color:var(--muted);font-size:13px;line-height:1.45}.pill{display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border:1px solid var(--line);background:#0b1326;color:var(--muted);border-radius:999px;font-size:12px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}.inputrow{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+input,select,textarea{width:100%;background:#081225;border:1px solid var(--line);color:var(--text);border-radius:10px;padding:9px}
+input[type=number]{width:48px;text-align:center;padding:8px}.match{display:grid;grid-template-columns:42px 1fr 48px 48px 1fr;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.team{text-align:right}.team.r{text-align:left}.team small,.matchno{color:var(--muted);font-size:11px}.matchno{text-align:center}
+table{width:100%;border-collapse:collapse;font-size:13px} th,td{border-bottom:1px solid var(--line);padding:7px 5px;text-align:left} th{color:var(--muted);font-weight:700}.qual{color:var(--green);font-weight:800}.third{color:var(--gold);font-weight:800}
+.bracket{display:grid;grid-template-columns:repeat(auto-fit,minmax(255px,1fr));gap:12px}.kmatch{background:#0b1326;border:1px solid var(--line);border-radius:16px;padding:12px}
+.kmatch .choice{display:block;width:100%;text-align:left;margin-top:7px;border-radius:12px;background:#091225}.choice.sel{background:rgba(110,231,168,.18);border-color:var(--green)}.choice.placeholder{opacity:.65}
+.scorecard{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}.metric{background:#0b1326;border:1px solid var(--line);border-radius:14px;padding:12px}.metric b{font-size:22px;color:var(--green)}
+.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:14px;align-items:stretch}@media(max-width:800px){.hero{grid-template-columns:1fr}.match{grid-template-columns:34px 1fr 42px 42px 1fr;font-size:12px}}
+.big{font-size:28px;font-weight:900;color:var(--gold)}.copybox{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;background:#071123;border:1px solid var(--line);padding:10px;border-radius:12px;white-space:pre-wrap;max-height:220px;overflow:auto}
+
+/* Real bracket layout */
+.bracketWrap{
+  overflow:auto;
+  padding:8px 0 18px;
+}
+.bracketGrid{
+  display:grid;
+  grid-template-columns:repeat(5, minmax(230px, 260px));
+  gap:38px;
+  align-items:stretch;
+  min-width:1320px;
+}
+.roundCol{
+  display:flex;
+  flex-direction:column;
+  justify-content:space-around;
+  gap:18px;
+}
+.roundTitle{
+  position:sticky;
+  top:0;
+  background:#07111f;
+  z-index:1;
+  color:var(--gold);
+  font-weight:900;
+  letter-spacing:.2px;
+  padding:6px 4px 10px;
+}
+.bracketMatch{
+  position:relative;
+  background:#0b1326;
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:10px;
+  min-height:104px;
+}
+.bracketMatch::after{
+  content:"";
+  position:absolute;
+  right:-39px;
+  top:50%;
+  width:39px;
+  height:1px;
+  background:var(--line);
+}
+.roundCol:last-child .bracketMatch::after{display:none}
+.bracketTeam{
+  display:block;
+  width:100%;
+  text-align:left;
+  margin-top:7px;
+  border-radius:11px;
+  background:#091225;
+  padding:8px 9px;
+}
+.bracketTeam.sel{
+  background:rgba(110,231,168,.18);
+  border-color:var(--green);
+}
+.bracketTeam.placeholder{opacity:.62}
+.bracketRoundOf16 .bracketMatch{margin-top:42px;margin-bottom:42px}
+.bracketQF .bracketMatch{margin-top:110px;margin-bottom:110px}
+.bracketSF .bracketMatch{margin-top:250px;margin-bottom:250px}
+.bracketFinal .bracketMatch{margin-top:545px}
+.mobileBracketNote{display:none}
+@media(max-width:900px){
+  .mobileBracketNote{display:block}
+  .bracketGrid{gap:26px;min-width:1220px}
+}
+
+</style>
+</head>
+<body>
+<header>
+  <h1>🏆 Kowshik's World Cup 2026 Predictor</h1>
+  <div class="sub">Predict every match, generate the bracket, compare with friends, and track Match 100.</div>
+</header>
+<nav>
+  <button class="active" onclick="tab('home',this)">Home</button>
+  <button onclick="tab('predict',this)">Group Predictions</button>
+  <button onclick="tab('tables',this)">Tables</button>
+  <button onclick="tab('knockout',this)">Knockout</button>
+  <button onclick="tab('match100',this)">Match 100</button>
+  <button onclick="tab('friends',this)">Friends / Share</button>
+</nav>
+<main>
+<section id="home" class="section active">
+ <div class="hero">
+  <div class="card">
+    <h2>How to play</h2>
+    <p class="note">Enter predicted scores for all group games. The app calculates standings, advances the top 2 plus 8 best third-place teams, and builds the knockout bracket. Then pick winners until the champion is decided.</p>
+    <div class="scorecard">
+      <div class="metric"><span class="pill">Champion</span><br><b id="homeChamp">—</b></div>
+      <div class="metric"><span class="pill">Match 100</span><br><b id="homeM100">—</b></div>
+      <div class="metric"><span class="pill">Completed group games</span><br><b id="homeComplete">0/72</b></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Friend game scoring</h2>
+    <table>
+      <tr><th>Prediction</th><th>Points</th></tr>
+      <tr><td>Exact score</td><td>3</td></tr>
+      <tr><td>Correct win/draw/loss</td><td>1</td></tr>
+      <tr><td>Correct knockout advance</td><td>2</td></tr>
+      <tr><td>Champion correct</td><td>5 bonus</td></tr>
+    </table>
+    <p class="note">Use export/import to compare brackets manually. A future online version can add live login + leaderboard.</p>
+  </div>
+ </div>
+</section>
+
+<section id="predict" class="section">
+ <div class="toolbar">
+  <button class="primary" onclick="autoFavorites()">Auto-pick favorites</button>
+  <button onclick="randomUpsets()">Add fun upsets</button>
+  <button class="danger" onclick="clearGroupScores()">Clear scores</button>
+ </div>
+ <div id="groupMatches"></div>
+</section>
+
+<section id="tables" class="section">
+ <div class="grid" id="groupTables"></div>
+</section>
+
+<section id="knockout" class="section">
+ <div class="card"><h2>Knockout bracket</h2><p class="note">The app uses the official 104-match numbering style. Third-place placement is approximated by selecting the highest-ranked eligible third-place team for each slot.</p></div><br>
+ <div id="bracket"></div>
+</section>
+
+<section id="match100" class="section">
+ <div class="card">
+  <h2>Match 100</h2>
+  <p class="note">Match 100 is a quarterfinal: Winner Match 95 vs Winner Match 96.</p>
+  <div id="match100box"></div>
+ </div>
+</section>
+
+<section id="friends" class="section">
+ <div class="widegrid">
+  <div class="card">
+   <h2>Profile + share</h2>
+   <div class="inputrow">
+    <input id="playerName" placeholder="Your name" oninput="state.player=this.value;save();render()">
+    <input id="groupName" placeholder="Group name e.g. Walmart friends" oninput="state.groupName=this.value;save();render()">
+    <button class="primary" onclick="download()">Download my picks</button>
+   </div>
+   <br>
+   <button onclick="copyShareText()">Copy summary</button>
+   <button onclick="document.getElementById('importFile').click()">Import friend's picks</button>
+   <input id="importFile" type="file" accept=".json" style="display:none" onchange="importFile(event)">
+   <h3>Share summary</h3>
+   <div class="copybox" id="summaryText"></div>
+  </div>
+  <div class="card">
+   <h2>Friend comparison</h2>
+   <p class="note">Import a friend’s JSON file to view their champion and Match 100.</p>
+   <div id="friendBox"></div>
+  </div>
+ </div>
+</section>
+</main>
+<script>
+const groups={"A":["Mexico","South Africa","South Korea","Czechia"],"B":["Canada","Bosnia and Herzegovina","Qatar","Switzerland"],"C":["Brazil","Morocco","Haiti","Scotland"],"D":["USA","Paraguay","Australia","Turkiye"],"E":["Germany","Curacao","Ivory Coast","Ecuador"],"F":["Netherlands","Japan","Sweden","Tunisia"],"G":["Iran","New Zealand","Belgium","Egypt"],"H":["Spain","Cape Verde","Saudi Arabia","Uruguay"],"I":["France","Senegal","Iraq","Norway"],"J":["Argentina","Algeria","Austria","Jordan"],"K":["Portugal","DR Congo","Uzbekistan","Colombia"],"L":["England","Croatia","Ghana","Panama"]};
+const M=[["A","Mexico","South Africa"],["A","South Korea","Czechia"],["A","Czechia","South Africa"],["A","Mexico","South Korea"],["A","Czechia","Mexico"],["A","South Africa","South Korea"],["B","Canada","Bosnia and Herzegovina"],["B","Qatar","Switzerland"],["B","Switzerland","Bosnia and Herzegovina"],["B","Canada","Qatar"],["B","Switzerland","Canada"],["B","Bosnia and Herzegovina","Qatar"],["C","Brazil","Morocco"],["C","Haiti","Scotland"],["C","Scotland","Morocco"],["C","Brazil","Haiti"],["C","Scotland","Brazil"],["C","Morocco","Haiti"],["D","USA","Paraguay"],["D","Australia","Turkiye"],["D","USA","Australia"],["D","Turkiye","Paraguay"],["D","Turkiye","USA"],["D","Paraguay","Australia"],["E","Germany","Curacao"],["E","Ivory Coast","Ecuador"],["E","Germany","Ivory Coast"],["E","Ecuador","Curacao"],["E","Ecuador","Germany"],["E","Curacao","Ivory Coast"],["F","Netherlands","Japan"],["F","Sweden","Tunisia"],["F","Netherlands","Sweden"],["F","Tunisia","Japan"],["F","Japan","Sweden"],["F","Tunisia","Netherlands"],["G","Iran","New Zealand"],["G","Belgium","Egypt"],["G","Belgium","Iran"],["G","New Zealand","Egypt"],["G","Egypt","Iran"],["G","New Zealand","Belgium"],["H","Spain","Cape Verde"],["H","Saudi Arabia","Uruguay"],["H","Spain","Saudi Arabia"],["H","Uruguay","Cape Verde"],["H","Cape Verde","Saudi Arabia"],["H","Uruguay","Spain"],["I","France","Senegal"],["I","Iraq","Norway"],["I","France","Iraq"],["I","Norway","Senegal"],["I","Norway","France"],["I","Senegal","Iraq"],["J","Argentina","Algeria"],["J","Austria","Jordan"],["J","Argentina","Austria"],["J","Jordan","Algeria"],["J","Algeria","Austria"],["J","Jordan","Argentina"],["K","Portugal","DR Congo"],["K","Uzbekistan","Colombia"],["K","Portugal","Uzbekistan"],["K","Colombia","DR Congo"],["K","Colombia","Portugal"],["K","DR Congo","Uzbekistan"],["L","England","Croatia"],["L","Ghana","Panama"],["L","England","Ghana"],["L","Panama","Croatia"],["L","Panama","England"],["L","Croatia","Ghana"]].map((x,i)=>({id:i+1,g:x[0],h:x[1],a:x[2]}));
+const K={73:["2A","2B"],74:["1E","3:A/B/C/D/F"],75:["1F","2C"],76:["1C","2F"],77:["1I","3:C/D/F/G/H"],78:["2E","2I"],79:["1A","3:C/E/F/H/I"],80:["1L","3:E/H/I/J/K"],81:["1D","3:B/E/F/I/J"],82:["1G","3:A/E/H/I/J"],83:["2K","2L"],84:["1H","2J"],85:["1B","3:E/F/G/I/J"],86:["1J","2H"],87:["1K","3:D/E/I/J/L"],88:["2D","2G"],89:["W74","W77"],90:["W73","W75"],91:["W76","W78"],92:["W79","W80"],93:["W83","W84"],94:["W81","W82"],95:["W86","W88"],96:["W85","W87"],97:["W89","W90"],98:["W93","W94"],99:["W91","W92"],100:["W95","W96"],101:["W97","W98"],102:["W99","W100"],103:["L101","L102"],104:["W101","W102"]};
+const rating={"France":96,"Spain":95,"Argentina":94,"England":93,"Brazil":92,"Portugal":91,"Germany":90,"Netherlands":88,"Belgium":87,"Uruguay":86,"Morocco":85,"Colombia":84,"Croatia":83,"USA":82,"Switzerland":82,"Japan":81,"Senegal":80,"Norway":80,"Turkiye":79,"Austria":79,"Ecuador":78,"Sweden":78,"Scotland":77,"Canada":76,"Paraguay":76,"Ivory Coast":75,"Egypt":74,"South Korea":74,"Czechia":73,"Algeria":73,"Ghana":72,"Australia":72,"Qatar":70,"Iran":70,"Saudi Arabia":69,"Panama":68,"Tunisia":68,"South Africa":67,"Bosnia and Herzegovina":67,"Uzbekistan":66,"DR Congo":66,"Iraq":65,"Jordan":64,"Haiti":63,"New Zealand":62,"Cape Verde":61,"Curacao":60};
+let state=JSON.parse(localStorage.getItem("kowshik_wc26_v2")||'{"player":"Kowshik","groupName":"","scores":{},"kwinners":{},"friend":null}');
+function save(){localStorage.setItem("kowshik_wc26_v2",JSON.stringify(state))}
+function tab(id,b){document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');render()}
+function setScore(id,s,v){state.scores[id]??={}; if(v==="") delete state.scores[id][s]; else state.scores[id][s]=+v; state.kwinners={}; save(); render()}
+function renderGroupMatches(){let html=""; for(const g of Object.keys(groups)){html+=`<div class="card"><h2>Group ${g}</h2>`; M.filter(m=>m.g===g).forEach(m=>{let s=state.scores[m.id]||{};html+=`<div class="match"><div class="matchno">#${m.id}</div><div class="team"><b>${m.h}</b><small>Group ${g}</small></div><input type="number" min="0" value="${s.h??""}" onchange="setScore(${m.id},'h',this.value)"><input type="number" min="0" value="${s.a??""}" onchange="setScore(${m.id},'a',this.value)"><div class="team r"><b>${m.a}</b></div></div>`});html+=`</div><br>`} document.getElementById("groupMatches").innerHTML=html}
+function standings(){let out={},idx={}; for(const g in groups){out[g]=groups[g].map(t=>({team:t,g,P:0,W:0,D:0,L:0,GF:0,GA:0,GD:0,Pts:0})); out[g].forEach(r=>idx[r.team]=r)} M.forEach(m=>{let s=state.scores[m.id]; if(!s||s.h==null||s.a==null)return; let H=idx[m.h],A=idx[m.a]; H.P++;A.P++;H.GF+=s.h;H.GA+=s.a;A.GF+=s.a;A.GA+=s.h; if(s.h>s.a){H.W++;A.L++;H.Pts+=3}else if(s.h<s.a){A.W++;H.L++;A.Pts+=3}else{H.D++;A.D++;H.Pts++;A.Pts++}}); for(const g in out){out[g].forEach(r=>r.GD=r.GF-r.GA);out[g].sort((a,b)=>b.Pts-a.Pts||b.GD-a.GD||b.GF-a.GF||(rating[b.team]||0)-(rating[a.team]||0))} return out}
+function renderTables(){let st=standings(); document.getElementById("groupTables").innerHTML=Object.entries(st).map(([g,rs])=>`<div class="card"><h2>Group ${g}</h2><table><tr><th>#</th><th>Team</th><th>P</th><th>GD</th><th>Pts</th></tr>${rs.map((r,i)=>`<tr><td>${i+1}</td><td class="${i<2?'qual':i==2?'third':''}">${r.team}</td><td>${r.P}</td><td>${r.GD}</td><td><b>${r.Pts}</b></td></tr>`).join("")}</table></div>`).join("")}
+function q(){let st=standings(),res={used:[],thirds:[]}; for(const g in st){res["1"+g]=st[g][0].team;res["2"+g]=st[g][1].team;res.thirds.push(st[g][2])} res.thirds.sort((a,b)=>b.Pts-a.Pts||b.GD-a.GD||b.GF-a.GF||(rating[b.team]||0)-(rating[a.team]||0));res.thirds=res.thirds.slice(0,8);return res}
+function resolve(seed,qu,loss){if(seed[0]=="W")return state.kwinners[seed.slice(1)]||seed;if(seed[0]=="L")return loss[seed.slice(1)]||seed;if(seed.startsWith("3:")){let elig=seed.slice(2).split("/");let p=qu.thirds.find(r=>elig.includes(r.g)&&!qu.used.includes(r.team));if(p){qu.used.push(p.team);return p.team}return seed}return qu[seed]||seed}
+function kt(){let qu=q(),teams={},loss={}; Object.keys(K).map(Number).sort((a,b)=>a-b).forEach(id=>{let arr=K[id].map(s=>resolve(s,qu,loss));teams[id]=arr;let w=state.kwinners[id]; if(w&&arr.includes(w)) loss[id]=arr.find(x=>x!==w)});return {teams,loss}}
+function pick(id,t){if(/^W|^L|^3:/.test(t))return; state.kwinners[id]=t; save(); render()}
+function renderBracket(){
+ let {teams}=kt();
+ const rounds=[
+   {name:"Round of 32", cls:"bracketR32", ids:Array.from({length:16},(_,i)=>73+i)},
+   {name:"Round of 16", cls:"bracketRoundOf16", ids:Array.from({length:8},(_,i)=>89+i)},
+   {name:"Quarterfinals", cls:"bracketQF", ids:Array.from({length:4},(_,i)=>97+i)},
+   {name:"Semifinals", cls:"bracketSF", ids:[101,102]},
+   {name:"Final", cls:"bracketFinal", ids:[104]}
+ ];
+ const matchCard=(id)=>{
+   let ts=teams[id]||["—","—"], w=state.kwinners[id]||"";
+   return `<div class="bracketMatch">
+     <span class="pill">Match ${id}</span>
+     ${ts.map(t=>`<button class="bracketTeam ${w===t?'sel':''} ${/^W|^L|^3:/.test(t)?'placeholder':''}" onclick="pick(${id}, '${String(t).replaceAll("'","\\'")}')">${t}</button>`).join("")}
+   </div>`;
+ };
+ document.getElementById("bracket").innerHTML=
+   `<p class="note mobileBracketNote">Tip: on phone, swipe horizontally to see the full bracket.</p>
+    <div class="bracketWrap">
+      <div class="bracketGrid">
+        ${rounds.map(r=>`<div class="roundCol ${r.cls}">
+          <div class="roundTitle">${r.name}</div>
+          ${r.ids.map(matchCard).join("")}
+        </div>`).join("")}
+      </div>
+    </div>
+    <div class="card">
+      <h2>3rd Place Match</h2>
+      <div class="bracket">${matchCard(103)}</div>
+    </div>`;
+}
+function summary(){let {teams}=kt();let champ=state.kwinners[104]||"—";let m100=(teams[100]||["—","—"]).join(" vs ");return `${state.player||"Player"}'s World Cup 2026 Prediction\nGroup: ${state.groupName||"—"}\nChampion: ${champ}\nMatch 100: ${m100}\nFinal: ${(teams[104]||["—","—"]).join(" vs ")}`;}
+function renderM100(){let {teams}=kt(),m=teams[100]||["Winner Match 95","Winner Match 96"];document.getElementById("match100box").innerHTML=`<div class="big">${m[0]} vs ${m[1]}</div><p>Your pick: <span class="qual">${state.kwinners[100]||"not selected yet"}</span></p>`}
+function renderHome(){let {teams}=kt();document.getElementById("homeChamp").textContent=state.kwinners[104]||"—";document.getElementById("homeM100").textContent=(teams[100]||["—","—"]).join(" vs ");document.getElementById("homeComplete").textContent=`${Object.values(state.scores).filter(s=>s.h!=null&&s.a!=null).length}/72`;document.getElementById("playerName").value=state.player||"";document.getElementById("groupName").value=state.groupName||"";document.getElementById("summaryText").textContent=summary();document.getElementById("friendBox").innerHTML=state.friend?`<p><b>${state.friend.player||"Friend"}</b></p><p class="note">Champion: ${state.friend.kwinners?.[104]||"—"}</p>`:`<p class="note">No friend imported yet.</p>`}
+function render(){renderGroupMatches();renderTables();renderBracket();renderM100();renderHome()}
+function autoFavorites(){M.forEach(m=>{let d=(rating[m.h]||60)-(rating[m.a]||60),h=1,a=1;if(d>18){h=3;a=0}else if(d>8){h=2;a=0}else if(d>2){h=2;a=1}else if(d<-18){h=0;a=3}else if(d<-8){h=0;a=2}else if(d<-2){h=1;a=2}state.scores[m.id]={h,a}});state.kwinners={};save();render()}
+function randomUpsets(){M.forEach(m=>{if(Math.random()<.12){let s=state.scores[m.id]||{h:1,a:1};state.scores[m.id]={h:s.a,a:s.h}}});save();render()}
+function clearGroupScores(){state.scores={};state.kwinners={};save();render()}
+function download(){let blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=(state.player||"player").replace(/\W+/g,"_")+"_wc26_predictions.json";a.click()}
+function importFile(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{state.friend=JSON.parse(r.result);save();render()};r.readAsText(f)}
+function copyShareText(){navigator.clipboard.writeText(summary());alert("Summary copied")}
+render();
+</script>
+</body>
+</html>
